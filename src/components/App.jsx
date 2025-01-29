@@ -7,11 +7,12 @@ import StartScreen from "./StartScreen";
 import Questions from "./Questions";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
+import FinishScreen from "./FinishScreen";
 
 const initialStat = {
   questions: [],
   status: "loading",
-  QusIndex: 0,
+  QusIndex: 14,
   answer: null,
   points: 0,
 };
@@ -50,6 +51,19 @@ function reducer(state, action, answer, points) {
         QusIndex: state.QusIndex + 1,
         answer: null,
       };
+    case "end":
+      return {
+        ...state,
+        status: "finished",
+      };
+    case "restart":
+      return {
+        ...state,
+        status: "ready",
+        QusIndex: 0,
+        answer: null,
+        points: 0,
+      };
     default:
       throw new Error("Action Unknonwn");
   }
@@ -68,6 +82,7 @@ function App() {
   return (
     <div className="app">
       <Header />
+
       <Main>
         {status === "loading" && <Loading />}
         {status === "error" && <Error />}
@@ -89,13 +104,20 @@ function App() {
               dispatch={dispatch}
               answer={answer}
             />
-            {QusIndex === questions.length - 1 ? null : (
-              <NextButton
-                dispatch={dispatch}
-                answer={answer} 
-              />
-            )}
+            <NextButton
+              dispatch={dispatch}
+              answer={answer}
+              QusIndex={QusIndex}
+              questions={questions}
+            />
           </>
+        )}
+        {status === "finished" && (
+          <FinishScreen
+            points={points}
+            maxPossiblePoints={TotalPoints}
+            dispatch={dispatch}
+          />
         )}
       </Main>
     </div>
