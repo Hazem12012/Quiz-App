@@ -6,6 +6,7 @@ import Error from "./Error";
 import StartScreen from "./StartScreen";
 import Questions from "./Questions";
 import NextButton from "./NextButton";
+import Progress from "./Progress";
 
 const initialStat = {
   questions: [],
@@ -34,29 +35,30 @@ function reducer(state, action, answer, points) {
         status: "error",
       };
     case "newAnsewer":
-      const question = state.questions.at(state.index);
+      const question = state.questions.at(state.QusIndex);
       return {
         ...state,
         answer: action.payload,
         points:
           action.payload === question.correctOption
-            ? state.points + state.questions[state.QusIndex].points
+            ? state.points + question.points
             : state.points,
       };
     case "nextQuestion":
       return {
         ...state,
         QusIndex: state.QusIndex + 1,
+        answer: null,
       };
     default:
       throw new Error("Action Unknonwn");
   }
 }
 function App() {
-  const [{ questions, status, QusIndex, answer }, dispatch] = useReducer(
-    reducer,
-    initialStat
-  );
+  const [{ questions, status, QusIndex, answer, points }, dispatch] =
+    useReducer(reducer, initialStat);
+  const TotalPoints = questions.reduce((prev, cur) => prev + cur.points, 0);
+
   useEffect(function () {
     fetch("http://localhost:8000/questions")
       .then((res) => res.json())
@@ -74,12 +76,25 @@ function App() {
         )}
         {status === "active" && (
           <>
+            <Progress
+              index={QusIndex}
+              NumQuestion={questions}
+              points={points}
+              TotalPoints={TotalPoints}
+              answer={answer}
+            />{" "}
+            {/*    */}
             <Questions
               questions={questions[QusIndex]}
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton dispatch={dispatch} />
+            {QusIndex === questions.length - 1 ? null : (
+              <NextButton
+                dispatch={dispatch}
+                answer={answer} 
+              />
+            )}
           </>
         )}
       </Main>
