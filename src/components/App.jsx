@@ -8,16 +8,19 @@ import Questions from "./Questions";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
 import FinishScreen from "./FinishScreen";
+import Timer from "./Timer";
+import Footer from "./Footer";
 
 const initialStat = {
   questions: [],
   status: "loading",
-  QusIndex: 14,
+  QusIndex: 0,
   answer: null,
   points: 0,
+  scoundRemaining: 0,
 };
 
-function reducer(state, action, answer, points) {
+function reducer(state, action, answer, points, scoundRemaining) {
   switch (action.type) {
     case "dataReceived":
       return {
@@ -29,6 +32,7 @@ function reducer(state, action, answer, points) {
       return {
         ...state,
         status: "active",
+        scoundRemaining: state.questions.length * 30,
       };
     case "dataFailed":
       return {
@@ -62,15 +66,25 @@ function reducer(state, action, answer, points) {
         status: "ready",
         QusIndex: 0,
         answer: null,
-        points: 0,
+        points: initialStat.points,
+        scoundRemaining: initialStat.scoundRemaining,
+      };
+    case "tick":
+      return {
+        ...state,
+        scoundRemaining: state.scoundRemaining - 1,
+
+        status: state.scoundRemaining === 0 ? "finished" : state.status,
       };
     default:
       throw new Error("Action Unknonwn");
   }
 }
 function App() {
-  const [{ questions, status, QusIndex, answer, points }, dispatch] =
-    useReducer(reducer, initialStat);
+  const [
+    { questions, status, QusIndex, answer, points, scoundRemaining },
+    dispatch,
+  ] = useReducer(reducer, initialStat);
   const TotalPoints = questions.reduce((prev, cur) => prev + cur.points, 0);
 
   useEffect(function () {
@@ -104,12 +118,16 @@ function App() {
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              QusIndex={QusIndex}
-              questions={questions}
-            />
+            <Footer>
+              {" "}
+              <Timer dispatch={dispatch} scoundRemaining={scoundRemaining} />
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                QusIndex={QusIndex}
+                questions={questions}
+              />
+            </Footer>
           </>
         )}
         {status === "finished" && (
